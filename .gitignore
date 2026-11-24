@@ -1,0 +1,11 @@
+/venv/
+/runtime/
+/models/
+/uretimler/
+/frontend/vendor/
+__pycache__/
+*.py[cod]
+*.log
+.env
+.env.*
+*.part
