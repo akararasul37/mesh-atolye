@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101016">
+  <title>Mesh Atölye</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="importmap">
+    {"imports":{"three":"/static/vendor/build/three.module.js","three/addons/":"/static/vendor/examples/jsm/"}}
+  </script>
+  <script src="/static/app.js" type="module"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/" aria-label="Mesh Atölye ana sayfa"><span class="brand-mark" aria-hidden="true"></span>Mesh Atölye</a>
+      <span class="local"><span class="local-dot"></span><span id="engine">Yerel motor kontrol ediliyor</span></span>
+    </div>
+  </header>
+  <main>
+    <div class="intro">
+      <h1>Görselden 3D modele</h1>
+      <p>Bir nesne görseli veya ön–yan–arka karakter paftası yükle.</p>
+    </div>
+
+    <div class="workspace">
+      <section class="panel input-panel" aria-labelledby="input-title">
+        <h2 id="input-title">Yeni üretim</h2>
+        <form id="generate">
+          <input type="file" id="file" name="image" accept="image/png,image/jpeg,image/webp" hidden>
+          <button id="drop" class="drop" type="button" aria-label="Kaynak görsel seç">
+            <img id="source-image" alt="Seçilen kaynak görsel" hidden>
+            <span id="drop-content">
+              <span class="upload-icon" aria-hidden="true">↑</span>
+              <strong>Görseli buraya bırak</strong>
+              <span>veya dosya seç</span>
+              <small>PNG, JPG, WebP · 20 MB</small>
+            </span>
+          </button>
+          <div id="selected" class="selected" hidden>
+            <span id="filename"></span>
+            <button id="clear-file" type="button" aria-label="Seçilen görseli kaldır">×</button>
+          </div>
+          <label class="field">Görsel düzeni
+            <select id="layout" name="layout">
+              <option value="auto">Otomatik algıla</option>
+              <option value="single">Tek görünüş</option>
+              <option value="turnaround">Ön, yan ve arka pafta</option>
+            </select>
+          </label>
+          <label class="field" id="profile-field" hidden>Ortadaki profil
+            <select id="profile" name="profile">
+              <option value="right">Yüz sağa bakıyor</option>
+              <option value="left">Yüz sola bakıyor</option>
+            </select>
+          </label>
+          <p class="field-note" id="layout-note" hidden>Soldan sağa ön, yan ve arka. Görünüşlerin arasında boşluk bırak.</p>
+          <label class="field">Çıktı
+            <select id="mode" name="mode">
+              <option value="pbr">Geometri + PBR kaplama</option>
+              <option value="geometry">Sadece geometri</option>
+            </select>
+          </label>
+          <label class="field">Kalite
+            <select id="quality" name="quality">
+              <option value="reference">Kaynak ayrıntıları</option>
+              <option value="studio">Stüdyo · daha yavaş</option>
+              <option value="quality">Yüksek kalite</option>
+              <option value="fast">Hızlı</option>
+            </select>
+          </label>
+          <p class="field-note" id="studio-note" hidden>Birden fazla geometri adayı değerlendirir ve kaplamaya daha fazla işlem süresi ayırır.</p>
+          <label class="check"><input type="checkbox" id="cleanup" name="remove_background" checked> Arka planı otomatik temizle</label>
+          <button type="submit" id="submit" class="button primary" disabled>3D Üret</button>
+          <p class="feedback" id="input-message" role="status" hidden></p>
+        </form>
+      </section>
+
+      <section class="panel preview-panel" aria-labelledby="preview-title">
+        <div class="preview-header">
+          <div>
+            <h2 id="preview-title">3D Önizleme</h2>
+            <p id="preview-name" hidden></p>
+            <div class="preview-actions">
+              <button id="reuse-source" class="quiet-action" type="button" hidden>Görseli tekrar kullan</button>
+              <button id="refine-texture" class="quiet-action" type="button" hidden>Kaplamayı iyileştir</button>
+              <button id="compare-texture" class="quiet-action" type="button" hidden>Önceki kaplamayı gör</button>
+            </div>
+            <p id="reference-status" hidden></p>
+            <p id="studio-status" hidden></p>
+          </div>
+          <div class="downloads" id="downloads" hidden>
+            <a class="button secondary" id="glb">↓ GLB</a>
+            <a class="button secondary" id="obj">↓ OBJ</a>
+            <a class="button secondary" id="obj-zip" hidden>↓ OBJ + Dokular</a>
+          </div>
+        </div>
+        <div class="preview" id="viewport">
+          <div class="viewport-placeholder" id="empty">
+            <span class="placeholder-icon" aria-hidden="true"></span>
+            <p id="empty-message">Üretilen model burada görünecek.</p>
+          </div>
+          <div id="canvas"></div>
+          <div class="view-tools" id="view-tools" hidden>
+            <button id="wireframe" type="button" aria-pressed="false">Tel kafes</button>
+            <button id="reset" type="button">Görünümü sıfırla</button>
+            <label class="light-control">Işık açısı <input type="range" id="light" min="0" max="360" value="40" aria-label="Işık açısı"></label>
+          </div>
+        </div>
+        <div class="progress-panel" id="progress-panel" hidden aria-live="polite">
+          <div class="progress-line"><span id="stage"></span><span id="percent"></span></div>
+          <progress id="progress" max="100" value="0"></progress>
+          <a id="generation-log" target="_blank" rel="noopener" hidden>Üretim günlüğü</a>
+        </div>
+        <div id="references" class="references" aria-label="Kullanılan görünüşler" hidden></div>
+      </section>
+    </div>
+
+    <section class="history" aria-labelledby="history-title">
+      <div class="history-heading"><h2 id="history-title">Üretim geçmişi</h2><span id="history-count"></span></div>
+      <p id="no-history">Henüz üretim yok.</p>
+      <div id="history-list" class="history-list"></div>
+      <button type="button" class="button secondary" id="more" hidden>Daha fazla göster</button>
+    </section>
+  </main>
+</body>
+</html>
